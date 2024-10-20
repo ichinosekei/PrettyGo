@@ -42,16 +42,22 @@ func main() {
 
 // высылает версию
 func versionHandler(w http.ResponseWriter, r *http.Request) {
-	// говорим 200 код все хорошо серверу (http.StatusOK)
+	if r.Method != http.MethodGet {
+		w.Header().Set("Allow", http.MethodGet)
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(version))
-	//write, err := w.Write([]byte(version))
-	//if err != nil {
-	//	return
-	//}
 }
 
 func decodeHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.Header().Set("Allow", http.MethodPost)
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+
 	var input struct {
 		InputString string `json:"inputString"`
 	}
@@ -72,12 +78,16 @@ func decodeHandler(w http.ResponseWriter, r *http.Request) {
 	}{
 		OutputString: string(decoded),
 	}
-
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
 
 func hardOpHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		w.Header().Set("Allow", http.MethodGet)
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
 	randomSleep := time.Duration(rand.Intn(11)+10) * time.Second
 	time.Sleep(randomSleep)
 
@@ -100,7 +110,7 @@ func gracefulShutdown(server *http.Server) {
 	// в рамках нашего задание так понимаю не надо давать время на завершение
 	// но и не надо использовать server.Close() поэтому таймер
 	// с 0 сек программа попытается завершить
-	ctx, cancel := context.WithTimeout(context.Background(), 0*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	// если не получится завершить программу сделаем

@@ -15,17 +15,19 @@
 ## Структура проекта
 
 ```
-/hw2
+hw2/
+├── client/
+│   ├── client.go          // Основной клиентский код
+│   ├── decode.go          // Метод для POST запроса на декодирование base64
+│   ├── hardop.go          // Метод для GET запроса на выполнение сложной операции
+│   ├── version.go         // Метод для GET запроса версии сервера
 │
 ├── server/
-│   ├── main.go       # Код HTTP-сервера
-│   └── go.mod       
+│   ├── main.go            // Сервер, предоставляющий эндпоинты
 │
-├── client/
-│   ├── main.go       # Код HTTP-клиента
-│   └── go.mod        
-│
-└── README.md      
+├── go.mod                 // Модуль Go
+├── README.md              // Описание проекта и инструкции
+    
 ```
 
 ## Настройка
@@ -67,25 +69,60 @@ go mod init client
 ```
 Server is running on port 8080...
 ```
+### 3. Клиент инцилизируется файлом main.go лежащем в корне проекта
 
-### 3. Запуск клиента
+### 4. Запуск клиента и работа с ним
 
 1. Откройте новый терминал и перейдите в директорию `client`:
    ```bash
-   cd client
+   cd hw2
    ```
 
-2. Запустите клиента:
+2. Запустить инциализацию клиента:
    ```bash
    go run main.go
    ```
+Клиент использует структура Client, который инициализируется с параметрами схемы, хоста и порта. Пример инициализации:
+```go
+client := client.NewClient("http", "localhost", "8080")
+```
+Клиент поддерживает следующие методы:
 
-Клиент последовательно вызовет следующие запросы:
+GetVersion() — выполняет GET запрос на /version и возвращает версию сервера:
+```go
+version, err := client.GetVersion()
+if err != nil {
+    fmt.Println("Error fetching version:", err)
+} else {
+    fmt.Println("Server version:", version)
+}
+```
+DecodeString() — выполняет POST запрос на /decode, отправляя строку в формате base64 для декодирования:
+```go
+decoded, err := client.DecodeString("SGVsbG8sIFdvcmxkIQ==")
+if err != nil {
+    fmt.Println("Error decoding string:", err)
+} else {
+    fmt.Println("Decoded string:", decoded)
+}
+
+```
+HardOp() — выполняет GET запрос на /hard-op, эмулируя сложную операцию:
+```go
+err := client.HardOp()
+if err != nil {
+    fmt.Println("Error during hard operation:", err)
+} else {
+    fmt.Println("Hard operation completed successfully")
+}
+
+```
+
 - `GET /version`: Получает и выводит версию API.
 - `POST /decode`: Декодирует строку Base64 и выводит результат.
 - `GET /hard-op`: Симулирует длительную операцию и выводит успех или неудачу. Если запрос выполняется дольше 15 секунд, клиент отменит его и выведет сообщение о таймауте.
 
-### 4. Graceful shutdown
+### 5. Graceful shutdown
 
 Вы можете остановить сервер, отправив сигнал `SIGTERM` или `SIGINT` (например, нажав `Ctrl+C`). Сервер попытается корректно завершить работу, дав возможность завершить текущие запросы в течение 5 секунд перед остановкой.
 
